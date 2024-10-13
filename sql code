@@ -52,6 +52,10 @@ SELECT * FROM 1950_UNRECONCILED;
 select * from bank;
 select * from gl;
 
+TRUNCATE TABLE 1950_UNRECONCILED;
+TRUNCATE TABLE BANK;
+TRUNCATE TABLE GL;
+
 SELECT
     u.transaction_number AS unreconciled_transaction,
     u.amount AS unreconciled_amount,
@@ -126,6 +130,9 @@ use 1950_unreconciled;
 drop table 1950_unreconciled;
 INSERT INTO 1950_Unreconciled VALUES ("2024-05-31", "-44730215.85", 0, "JOURNAL", 0, 0, 0, 0, 0, "Auto transfer 1950-1920 2024", "CF Adjustment", "CF Spreadsheet A 30000001035", "auto transfer 1950-1920 2024");
 
+truncate unreconciled_items;
+select* from unreconciled_items;
+
 INSERT INTO 1950_Unreconciled 
 VALUES (
     '2024-05-31',                   -- date (correct date format)
@@ -142,32 +149,6 @@ VALUES (
     'CF Spreadsheet A 30000001035',  -- journal_batch (string)
     'auto transfer 1950-1920 2024'   -- journal_description (string)
 );
-
-LOAD DATA INFILE "C:\Users\Sandra Stasaityte\Downloads"
-INTO TABLE 1950_Unreconciled
-FIELDS TERMINATED BY ','  -- This specifies that the fields are separated by commas
-ENCLOSED BY '"'           -- This specifies that the fields are enclosed by double quotes
-LINES TERMINATED BY '\n'  -- This specifies that each new line is a new record
-IGNORE 1 LINES            -- Ignore the first line if your CSV has a header row
-(date, amount, transaction_type, source, statement, additional_information, value_date, account_servicer_reference, customer_reference, transaction_number, journal, journal_batch, journal_description);
-
-LOAD DATA INFILE "C:\Users\Sandra Stasaityte\Downloads"
-INTO TABLE GL
-FIELDS TERMINATED BY ',' 
-LINES TERMINATED BY '\n' 
-IGNORE 1 LINES
-(gl_ref, transaction_date, line_description, @accounted_dr, @accounted_cr, @total, event_date, gl_je_name, header_description)
-SET accounted_dr = IF(@accounted_dr = '', NULL, @accounted_dr),
-    accounted_cr = IF(@accounted_cr = '', NULL, @accounted_cr),
-    total = IF(@total = '', NULL, @total);  -- Converts empty strings to NULL
-    
-LOAD DATA INFILE "C:\Users\Sandra Stasaityte\Downloads"
-INTO TABLE Bank
-FIELDS TERMINATED BY ',' 
-ENCLOSED BY '"'             -- Optional: if your CSV values are enclosed in double quotes
-LINES TERMINATED BY '\n' 
-IGNORE 1 LINES              -- Skips the first line (headers) if present
-(bank_ref, booking_date, remitter_beneficiary, value_date, Reference, amount, status, transaction_type, company, ap_comments, ops, type);
 
 CREATE TABLE Unreconciled_Items (
     unreconciled_ref INT NOT NULL AUTO_INCREMENT,
@@ -384,6 +365,8 @@ LEFT JOIN
 WHERE 
     b.bank_ref IS NULL 
     AND g.gl_ref IS NULL;  -- If the item is still not found in either Bank or GL
+    
+    
 INSERT INTO Unreconciled_Items (date, amount, reference, source)
 SELECT
     booking_date,
@@ -539,6 +522,9 @@ LEFT JOIN
     Bank b ON g.transaction_date = b.booking_date AND g.total = b.amount AND g.gl_je_name = b.reference
 WHERE
     b.bank_ref IS NULL;
+    
+SHOW VARIABLES LIKE 'secure_file_priv';
+
 
 
 
