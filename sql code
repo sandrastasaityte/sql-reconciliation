@@ -643,6 +643,77 @@ SELECT
 FROM
     Bank b
 LEFT JOIN
-    GL g ON b.Amount = g.total AND b.reference = g.line_description
+    GL g ON b.Amount = g.total AND b.reference = g.line_description;
+
+
+
+
+SELECT
+    u.transaction_number AS unreconciled_transaction,
+    u.amount AS unreconciled_amount,
+    u.value_date AS unreconciled_value_date,
+    g.gl_ref AS gl_reference,
+    g.accounted_dr AS gl_debit,
+    g.accounted_cr AS gl_credit,
+    g.value_date AS gl_value_date,
+    b.bank_ref AS bank_reference,
+    b.amount AS bank_amount,
+    b.value_date AS bank_value_date
+FROM
+    1950_unreconciled u
+RIGHT JOIN
+    GL g ON u.amount = g.accounted_dr AND u.value_date = g.value_date
+RIGHT JOIN
+    Bank b ON u.amount = b.amount AND u.value_date = b.value_date
+WHERE
+    g.gl_ref IS NULL OR b.bank_ref IS NULL;
+
+
+
+SELECT
+    u.amount AS unreconciled_amount,
+    u.account_servicer_reference,
+    u.customer_reference,
+    u.value_date AS unreconciled_value_date,
+    g.gl_ref AS gl_reference,
+    g.total as gl_amount,
+    g.transaction_date_date AS gl_transaction_date,
+    g.line_description as gl_line_description,
+    b.bank_ref AS bank_reference,
+    b.amount AS bank_amount,
+    b.booking_date AS bank_booking_date,
+    b.reference as bank_reference
+FROM
+    1950_unreconciled u
+RIGHT JOIN
+    GL g ON u.amount = g.total AND u.date = g.transaction_date
+RIGHT JOIN
+    Bank b ON u.amount = b.amount AND u.date = b.booking_date
+WHERE
+    g.gl_ref IS NULL OR b.bank_ref IS NULL;
+
+
+
+SELECT
+    u.amount AS unreconciled_amount,
+    u.account_servicer_reference AS unreconciled_account_servicer_reference,
+    u.customer_reference AS unreconciled_customer_reference,
+    u.value_date AS unreconciled_value_date,
+    g.gl_ref AS gl_reference,
+    g.total AS gl_total,
+    g.transaction_date AS gl_transaction_date,
+    g.line_description AS gl_line_description,
+    b.bank_ref AS bank_reference,
+    b.amount AS bank_amount,
+    b.booking_date AS bank_booking_date,
+    b.reference AS bank_transaction_reference -- Fixed alias to avoid conflicts
+FROM
+    1950_unreconciled u
+RIGHT JOIN
+    GL g ON u.amount = g.total AND u.value_date = g.transaction_date
+RIGHT JOIN
+    Bank b ON u.amount = b.amount AND u.value_date = b.booking_date
+WHERE
+    g.gl_ref IS NULL OR b.bank_ref IS NULL;
 
 
